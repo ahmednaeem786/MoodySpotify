@@ -30,6 +30,14 @@ def auth_login():
     # generate state (should be stored in session typically)
     state = secrets.token_urlsafe(16)
     url = spotify_client.build_auth_url(state=state)
+
+    # --- ADD THIS PRINT STATEMENT ---
+    print("\n--- DEBUG URL ---")
+    print(url)
+    print("-----------------\n")
+    # --------------------------------
+
+    
     return RedirectResponse(url)
 
 
@@ -92,7 +100,7 @@ def api_me(spotify_user_id: str):
     if not user:
         raise HTTPException(status_code=404, detail="user not found")
     # ensure token valid
-    access_token = ensure_valid_access_token(user)a
+    access_token = ensure_valid_access_token(user)
     profile = spotify_client.get_user_profile(access_token)
     return profile
 
@@ -135,6 +143,10 @@ def api_top_tracks(spotify_user_id: str, limit: int = 50):
     if track_ids:
         # split into chunks of 100 if necessary; here limit is small
         audio_features_json = spotify_client.get_audio_features(access_token, track_ids)
+
+        if not audio_features_json or audio_features_json.get("audio_features") is None:
+            audio_features_json = {"audio_features": []}
+        
         af_list = audio_features_json.get("audio_features", [])
         # map and update Track.audio_features
         for af in af_list:
